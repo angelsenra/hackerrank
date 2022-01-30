@@ -1,6 +1,7 @@
 import subprocess
 import os
 import os.path
+import shutil
 from pytest import mark
 
 PYTHON_CMD = os.environ.get("HACKERRANK_PYTHON_CMD", "python")
@@ -34,6 +35,10 @@ problem_id_and_testcase_filenames = [
 
 
 class TestRunTestcases:
+    def test_clear_failed_tests_data(self):
+        shutil.rmtree(os.path.join("tests", ".data"))
+        os.mkdir(os.path.join("tests", ".data"))
+
     @mark.parametrize(["problem_id", "input_filename", "output_filename"], problem_id_and_testcase_filenames)
     def test_testcase(self, problem_id, input_filename, output_filename):
         problem_filepath = os.path.join("problems", f"{problem_id.replace('-', '_')}.py")
@@ -41,7 +46,10 @@ class TestRunTestcases:
         output_text = _get_file_content(output_filename, problem_id, "output")
 
         result = _run_cmd(problem_filepath, input_text)
-        assert result == output_text
+        if result.rstrip() != output_text.rstrip():
+            with open(os.path.join("tests", ".data", f"{problem_id}-{output_filename}"), "w") as f:
+                f.write(result)
+        assert result.rstrip() == output_text.rstrip()
 
     @mark.parametrize("problem_id", solved_problem_ids - testcased_problem_ids)
     def test_there_are_no_untested_problems(self, problem_id):
@@ -54,7 +62,7 @@ class TestRunTestcases:
 
 def _get_file_content(filename, problem_id, folder_name):
     with open(os.path.join(TESTCASES_PATH, f"{problem_id}-testcases", folder_name, filename), "r") as f:
-        return f.read() + "\n"
+        return f.read()
 
 
 def _run_cmd(problem_filepath, input_text):
