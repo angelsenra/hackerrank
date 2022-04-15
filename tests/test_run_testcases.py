@@ -36,7 +36,10 @@ problem_id_and_testcase_filenames = [
 
 class TestRunTestcases:
     def test_clear_failed_tests_data(self):
-        shutil.rmtree(os.path.join("tests", ".data"))
+        try:
+            shutil.rmtree(os.path.join("tests", ".data"))
+        except FileNotFoundError:
+            pass  # It doesn't exist yet. Just create an empty folder
         os.mkdir(os.path.join("tests", ".data"))
 
     @mark.parametrize(["problem_id", "input_filename", "output_filename"], problem_id_and_testcase_filenames)
